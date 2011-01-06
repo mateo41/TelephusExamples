@@ -47,11 +47,15 @@ def dostuff(client):
         
     yield client.system_add_keyspace(keyspace)
     yield client.set_keyspace(KEYSPACE)
-    
-    #Trying to update the column family to add another Index for state 
-    #I'm not sure how to do this. I'll ask the Telephus guys 
-    cf_def = CfDef(keyspace=KEYSPACE, 
+    desc = yield client.describe_keyspace(KEYSPACE) 
+    print desc
+    #This isn't the best way to get the id. This works because there is only one column family. It would be
+    #better to retrieve the column family using a name.  
+    cf_id = desc.cf_defs[0].id
+     
+    cf_def =  CfDef(keyspace=KEYSPACE, 
                    name = CF,
+                   id = cf_id,
                    column_type = 'Standard',
                    comparator_type='org.apache.cassandra.db.marshal.UTF8Type',
                    column_metadata = [ ColumnDef(
@@ -62,11 +66,11 @@ def dostuff(client):
                                         ) 
                                      ]
                    )
+     
                        
     #Uncomment to see the error.
     yield client.system_update_column_family(cf_def)
     yield client.system_drop_keyspace(KEYSPACE)
-    
     
 if __name__ == '__main__':
     from twisted.internet import reactor
